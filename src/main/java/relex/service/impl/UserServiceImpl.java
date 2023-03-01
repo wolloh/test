@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import relex.controller.User.Models.RegisterUserAccountRequest;
+import relex.exception.NoSuchUserException;
 import relex.models.User;
 import relex.repository.UserRepository;
 import relex.service.UserService;
@@ -24,7 +25,7 @@ public class UserServiceImpl  implements UserService {
         public User register(RegisterUserAccountRequest request) {
                 User userExist=repository.checkEmailAndUserName(request.getEmail(),request.getUserName());
                 if(userExist!=null) {
-                        throw  new Exception("User already exist");
+                        throw  new NoSuchUserException("User already exist");
                 }
                 User user=new User(request.getEmail(),request.getUserName(),shaCreator.createSHA(request.userName));
                 repository.save(user);

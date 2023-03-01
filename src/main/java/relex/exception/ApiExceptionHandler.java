@@ -40,5 +40,11 @@ public class ApiExceptionHandler {
         );
         return new ResponseEntity<>(apiException,HttpStatus.BAD_REQUEST);
     }
-
+    @ExceptionHandler(value = {UserAlreadyExistException.class})
+    public ResponseEntity<Object> handleFileNotFoundException(UserAlreadyExistException e){
+        ApiErrorResponse apiException=new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST,e.getMessage()
+        );
+        return new ResponseEntity<>(apiException,HttpStatus.BAD_REQUEST);
+    }
 }
