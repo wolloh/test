@@ -7,7 +7,6 @@ import relex.controller.Wallet.Models.*;
 import relex.exception.NoSuchUserException;
 import relex.exception.NotEnoughMoneyException;
 import relex.exception.RoleGrantException;
-import relex.models.CurrencyRate;
 import relex.models.Wallet;
 import relex.repository.WalletRepository;
 import relex.service.Models.CurrencyRateModel;
@@ -42,12 +41,12 @@ public class WalletServiceImpl  implements WalletService {
 
     @Override
     public WalletModel updateMoney(DepositRequest depositRequest)  {
-        String walletType=getWalletType(depositRequest);
-        Wallet wallet=repository.getWalletByKeyAndType(depositRequest.getKey(),walletType);
+        var walletType=getWalletType(depositRequest);
+        var wallet=repository.getWalletByKeyAndType(depositRequest.getKey(),walletType);
         if(wallet==null){
             throw new NoSuchUserException("There is no user with this key");
         }
-        BigDecimal balance=wallet.getBalance();
+        var balance=wallet.getBalance();
         wallet.setBalance(balance.add(depositRequest.balanceByType(walletType)));
         repository.save(wallet);
         return new WalletModel(walletType,wallet.getBalance());
@@ -55,25 +54,27 @@ public class WalletServiceImpl  implements WalletService {
 
     @Override
     public WalletModel withDraw(WithdrawalRequest withdrawalRequest)  {
-        Wallet wallet=repository.getWalletByKeyAndType(withdrawalRequest.getKey(),withdrawalRequest.currency+"_wallet");
+        var key=withdrawalRequest.getKey();
+        var currency=withdrawalRequest.getCurrency();
+        var wallet=repository.getWalletByKeyAndType(key,currency+"_wallet");
         if(wallet==null){
             throw new NoSuchUserException("There is no user with this key");
         }
-        BigDecimal balance=wallet.getBalance();
+        var balance=wallet.getBalance();
         if(balance.compareTo(withdrawalRequest.count)<0){
             throw  new NotEnoughMoneyException("You dont have enough money to perform operation");
         }
 
         wallet.setBalance(balance.subtract(withdrawalRequest.count));
         repository.save(wallet);
-        return new WalletModel(withdrawalRequest.currency+"_wallet",wallet.getBalance());
+        return new WalletModel(currency+"_wallet",wallet.getBalance());
     }
 
 
 
     @Override
     public ArrayList<CurrencyRateModel> getRate(String key,String currency)  {
-        CurrencyRate rate=repository.getRateByCurrencyAndKey(currency,key);
+        var rate=repository.getRateByCurrencyAndKey(currency,key);
         if(rate==null){
             throw new NoSuchUserException("There is no user with this key");
         }
@@ -95,20 +96,20 @@ public class WalletServiceImpl  implements WalletService {
 
     @Override
     public ExchangeModel exchangeMoney(ExchangeRequest exchangeRequest)  {
-        BigDecimal amount=exchangeRequest.getAmount();
-        String currencyFrom=exchangeRequest.getCurrencyFrom();
-        String currencyTo=exchangeRequest.getCurrencyTo();
-        String key=exchangeRequest.getKey();
-        CurrencyRate rate=repository.getRateByCurrencyAndKey(currencyFrom,key);
-        Wallet walletFrom=repository.getWalletByKeyAndType(key,currencyFrom+"_wallet");
-        Wallet walletTo=repository.getWalletByKeyAndType(key,currencyTo+"_wallet");
+        var amount=exchangeRequest.getAmount();
+        var currencyFrom=exchangeRequest.getCurrencyFrom();
+        var currencyTo=exchangeRequest.getCurrencyTo();
+        var key=exchangeRequest.getKey();
+        var rate=repository.getRateByCurrencyAndKey(currencyFrom,key);
+        var walletFrom=repository.getWalletByKeyAndType(key,currencyFrom+"_wallet");
+        var walletTo=repository.getWalletByKeyAndType(key,currencyTo+"_wallet");
         if(rate==null || walletFrom==null || walletTo==null){
             throw new NoSuchUserException("There is no user with this key");
         }
         if(walletFrom.getBalance().compareTo(exchangeRequest.getAmount())<0){
             throw  new NotEnoughMoneyException("You dont have enough money to perform operation");
         }
-        BigDecimal rateCurrency=rate.getRateToCurr(currencyTo);
+        var rateCurrency=rate.getRateToCurr(currencyTo);
         walletFrom.setBalance(walletFrom.getBalance().subtract(amount));
         walletTo.setBalance(amount.multiply(rateCurrency));
         repository.save(walletFrom);
@@ -122,7 +123,7 @@ public class WalletServiceImpl  implements WalletService {
         if(!key.equals(System.getenv("ADMIN_KEY"))){
             throw  new RoleGrantException("Dont enough rights");
         }
-        BigDecimal sum=repository.getSumCurrency(currency+"_wallet");
+        var sum=repository.getSumCurrency(currency+"_wallet");
         return sum;
     }
 
@@ -132,7 +133,7 @@ public class WalletServiceImpl  implements WalletService {
         if(!key.equals(System.getenv("ADMIN_KEY"))){
             throw  new RoleGrantException("Dont enough rights");
         }
-        Integer res=repository.getTransactionCount(dateFrom,dateTo);
+        var res=repository.getTransactionCount(dateFrom,dateTo);
         return res;
     }
 
